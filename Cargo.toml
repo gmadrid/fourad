@@ -8,6 +8,7 @@ edition = "2018"
 [lib]
 
 [dependencies]
+argh = "0.1.6"
 lazy_static = "1.4.0"
 rand = "0.8.4"
 regex = "1.5.4"
