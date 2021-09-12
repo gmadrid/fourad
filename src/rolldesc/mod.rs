@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+mod grammar;
 mod parser;
 use parser::parse_diecode;
 
