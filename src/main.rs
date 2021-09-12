@@ -57,11 +57,11 @@ impl Default for RollDesc {
 impl RollDesc {
     fn execute(&self, roller: &mut impl Roller) -> i16 {
         match self.modifier {
-            RollModifier::None => rolls(self.repeat, roller),
-            RollModifier::Plus(val) => rolls(self.repeat, roller) + val as i16,
-            RollModifier::Minus(val) => rolls(self.repeat, roller) - val as i16,
-            RollModifier::Squared => (roll(false, roller) * roll(false, roller)) as i16,
-            RollModifier::Hundo => (roll(false, roller) * 10 + roll(false, roller)) as i16,
+            RollModifier::None => rolls(self.repeat, roller, self.sides),
+            RollModifier::Plus(val) => rolls(self.repeat, roller, self.sides) + val as i16,
+            RollModifier::Minus(val) => rolls(self.repeat, roller, self.sides) - val as i16,
+            RollModifier::Squared => (roll(false, roller, self.sides) * roll(false, roller, self.sides)) as i16,
+            RollModifier::Hundo => (roll(false, roller, self.sides) * 10 + roll(false, roller, self.sides)) as i16,
         }
     }
 }
@@ -81,12 +81,12 @@ impl Default for RollModifier {
     }
 }
 
-fn roll(explode: bool, roller: &mut impl Roller) -> u8 {
+fn roll(explode: bool, roller: &mut impl Roller, sides: u8) -> u8 {
     let mut sum = 0;
     let mut done = false;
 
     while !done {
-        let die = roller.roll(6);
+        let die = roller.roll(sides);
         sum += die;
 
         // TODO: add a quiet option
@@ -100,8 +100,8 @@ fn roll(explode: bool, roller: &mut impl Roller) -> u8 {
     sum
 }
 
-fn rolls(repeat: u8, roller: &mut impl Roller) -> i16 {
-    (0..repeat).map(|_| roll(true, roller) as i16).sum()
+fn rolls(repeat: u8, roller: &mut impl Roller, sides: u8) -> i16 {
+    (0..repeat).map(|_| roll(true, roller, sides) as i16).sum()
 }
 
 fn parse_repeat(s: &str) -> Result<u8> {
