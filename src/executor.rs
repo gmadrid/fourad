@@ -29,7 +29,7 @@ fn roll(explode: bool, roller: &mut impl Roller, sides: u8) -> u8 {
         // TODO: add a quiet option
         println!("Rolled: {}", die);
 
-        if die != 6 || explode == false {
+        if die != 6 || !explode {
             done = true
         }
     }
