@@ -3,6 +3,8 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use crate::rolldesc::{RollModifier, RollDesc};
 
+// TODO: write a grammar and a parser for the dice codes. Regex won't allow good error reporting.
+
 lazy_static! {
     static ref RE: Regex = Regex::new("([[:digit:]]*)d([[:digit:]])([+-]([[:digit:]]+))?").unwrap();
 }
@@ -41,7 +43,6 @@ fn parse_sides(s: &str) -> Result<u8> {
 }
 
 pub fn parse_diecode(s: &str) -> Result<RollDesc> {
-    // TODO FIX THIS RETURN VALUE
     // TODO: do you want to allow spaces
     // What a cheaty special case.
     if s.starts_with("d6xd6") {
@@ -78,5 +79,117 @@ pub fn parse_diecode(s: &str) -> Result<RollDesc> {
         })
     } else {
         Err(Error::UnknownError)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn basic_d6() {
+        assert_eq!(parse_diecode("d6").unwrap(), RollDesc::default());
+    }
+
+    #[test]
+    fn repeat_2d6() {
+        assert_eq!(
+            parse_diecode("2d6").unwrap(),
+            RollDesc {
+                repeat: 2,
+                ..RollDesc::default()
+            }
+        )
+    }
+
+    #[test]
+    fn modifier_d6plus1() {
+        assert_eq!(
+            parse_diecode("d6+1").unwrap(),
+            RollDesc {
+                modifier: RollModifier::Plus(1),
+                ..RollDesc::default()
+            }
+        )
+    }
+
+
+    #[test]
+    fn repeat_modifier_2d6plus1() {
+        assert_eq!(
+            parse_diecode("2d6+1").unwrap(),
+            RollDesc {
+                repeat: 2,
+                modifier: RollModifier::Plus(1),
+                ..RollDesc::default()
+            }
+        )
+    }
+
+    #[test]
+    fn test_2d6plus2() {
+        assert_eq!(
+            parse_diecode("2d6+2").unwrap(),
+            RollDesc {
+                repeat: 2,
+                modifier: RollModifier::Plus(2),
+                ..RollDesc::default()
+            }
+        )
+    }
+
+    #[test]
+    fn test_d6xd6() {
+        assert_eq!(
+            parse_diecode("d6xd6").unwrap(),
+            RollDesc {
+                modifier: RollModifier::Squared,
+                ..RollDesc::default()
+            }
+        )
+    }
+
+    #[test]
+    fn test_d6minus1() {
+        assert_eq!(
+            parse_diecode("d6-1").unwrap(),
+            RollDesc {
+                modifier: RollModifier::Minus(1),
+                ..RollDesc::default()
+            }
+        )
+    }
+
+    #[test]
+    fn test_d6minus2() {
+        assert_eq!(
+            parse_diecode("d6-2").unwrap(),
+            RollDesc {
+                modifier: RollModifier::Minus(2),
+                ..RollDesc::default()
+            }
+        )
+    }
+
+    #[test]
+    fn hundo_d66() {
+        assert_eq!(
+            parse_diecode("d66").unwrap(),
+            RollDesc {
+                modifier: RollModifier::Hundo,
+                ..RollDesc::default()
+            }
+        )
+    }
+
+    #[test]
+    fn test_d3() {
+        assert_eq!(
+            parse_diecode("d3").unwrap(),
+            RollDesc {
+                sides: 3,
+                ..RollDesc::default()
+            }
+        )
     }
 }
