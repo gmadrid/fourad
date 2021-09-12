@@ -5,6 +5,8 @@ use parser::parse_diecode;
 
 use crate::{Error, Result};
 
+// TODO: add a check for d0.
+
 #[derive(Debug, Eq, PartialEq)]
 pub struct RollDesc {
     pub repeat: u8,
