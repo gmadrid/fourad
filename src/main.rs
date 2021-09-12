@@ -18,6 +18,7 @@
 //
 // Regex:   [0-9]*[dD]6([+-xX][0-9L]
 
+use rand::{thread_rng, Rng};
 use regex::Regex;
 use std::str::FromStr;
 
@@ -52,14 +53,15 @@ impl Default for RollDesc {
 }
 
 fn roll() -> u8 {
-    4
+    let mut rng = thread_rng();
+    rng.gen_range(1..=6)
+
 }
 
 fn rolls(repeat: u8) -> i16 {
     // TODO: rewrite this functionally.
     let mut sum: i16 = 0;
     for _ in 0..repeat {
-        println!("HI");
         sum += roll() as i16;
     }
 
@@ -68,7 +70,6 @@ fn rolls(repeat: u8) -> i16 {
 
 impl RollDesc {
     fn execute(&self) -> i16 {
-        dbg!(self);
         match self.modifier {
             RollModifier::None => rolls(self.repeat),
             RollModifier::Plus(val) => rolls(self.repeat) + val as i16,
@@ -102,7 +103,6 @@ impl FromStr for RollDesc {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        dbg!(s);
         // What a cheaty special case.
         if s.starts_with("d6xd6") {
             return Ok(RollDesc {
