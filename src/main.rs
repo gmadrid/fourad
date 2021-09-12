@@ -20,26 +20,13 @@
 
 // TODO: write a grammar and a parser for the dice codes. Regex won't allow good error reporting.
 
+use fourad::{Error, Result};
+
 use lazy_static::lazy_static;
 use rand::rngs::ThreadRng;
 use rand::{thread_rng, Rng};
 use regex::Regex;
 use std::str::FromStr;
-use thiserror::Error;
-
-type Result<T> = std::result::Result<T, FourADError>;
-
-#[derive(Debug, Error)]
-enum FourADError {
-    #[error("'{0}' is not a legal value for the number of sides")]
-    BadSidesString(String, std::num::ParseIntError),
-
-    #[error("'{0}' is not a legal repeat string")]
-    ParseRepeatError(String, std::num::ParseIntError),
-
-    #[error("an unknown error has occurred. This should never happen.")]
-    UnknownError,
-}
 
 lazy_static! {
     static ref RE: Regex = Regex::new("([[:digit:]]*)d([[:digit:]])([+-]([[:digit:]]+))?").unwrap();
@@ -122,7 +109,7 @@ fn parse_repeat(s: &str) -> Result<u8> {
         Ok(1)
     } else {
         s.parse()
-            .map_err(|err| FourADError::ParseRepeatError(s.to_string(), err))
+            .map_err(|err| Error::ParseRepeatError(s.to_string(), err))
     }
 }
 
@@ -142,11 +129,11 @@ fn parse_modifier(op: &str, value: &str) -> RollModifier {
 }
 
 fn parse_sides(s: &str) -> Result<u8> {
-    s.parse::<u8>().map_err(|err|FourADError::BadSidesString(s.to_string(), err))
+    s.parse::<u8>().map_err(|err|Error::BadSidesString(s.to_string(), err))
 }
 
 impl FromStr for RollDesc {
-    type Err = FourADError;
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
         // What a cheaty special case.
@@ -176,7 +163,7 @@ impl FromStr for RollDesc {
             );
             Ok(RollDesc { repeat, modifier, sides, })
         } else {
-            Err(FourADError::UnknownError)
+            Err(Error::UnknownError)
         }
     }
 }
@@ -201,7 +188,7 @@ impl Roller for RandRoller {
     }
 }
 
-fn main() -> std::result::Result<(), FourADError> {
+fn main() -> Result<()> {
     let arg = std::env::args().nth(1).unwrap_or_else(|| "d6".to_string());
     let desc: RollDesc = arg.parse()?;
 
