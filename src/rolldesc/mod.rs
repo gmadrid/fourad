@@ -44,3 +44,35 @@ impl FromStr for RollDesc {
         parse_diecode(s)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn default_mod() {
+        assert_eq!(RollModifier::None, RollModifier::default());
+    }
+
+    #[test]
+    fn default_desc() {
+        assert_eq!(RollDesc::default(),
+        RollDesc {
+            repeat: 1,
+            sides: 6,
+            modifier: Default::default()
+        })
+    }
+
+    #[test]
+    fn basic() {
+        // We just ensure that parsing works. All of the separates cases are tested in parser.rs.
+        // No fields are defaults.
+        assert_eq!("2d8+3".parse::<RollDesc>().unwrap(),
+        RollDesc {
+            repeat: 2,
+            sides: 8,
+            modifier: RollModifier::Plus(3)
+        })
+    }
+}
