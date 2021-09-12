@@ -1,4 +1,3 @@
-//
 // Need to match:
 //   d6    X
 //   d6+1  X
@@ -8,24 +7,76 @@
 //   d6xd6 X
 //   d6-1  X
 //   d6-2  X
-//   d6+L
-//   d6+hL
-//   d6-L
 //   d66   X
 
 //
 // <MULT:int>'d|D'6<OP><OPERAND>
 //
 // Regex:   [0-9]*[dD]6([+-xX][0-9L]
+// "([[:digit:]]*)d6([+-]([[:digit:]]+))?"
+// match 1 => repeat
+// match 2 => modifier part
+// match 3 => modifier value
 
+// TODO: write a grammar and a parser for the dice codes. Regex won't allow good error reporting.
+
+use lazy_static::lazy_static;
+use rand::rngs::ThreadRng;
 use rand::{thread_rng, Rng};
 use regex::Regex;
 use std::str::FromStr;
+use thiserror::Error;
+
+type Result<T> = std::result::Result<T, FourADError>;
+
+#[derive(Debug, Error)]
+enum FourADError {
+    #[error("'{0}' is not a legal value for the number of sides")]
+    BadSidesString(String, std::num::ParseIntError),
+
+    #[error("'{0}' is not a legal repeat string")]
+    ParseRepeatError(String, std::num::ParseIntError),
+
+    #[error("an unknown error has occurred. This should never happen.")]
+    UnknownError,
+}
+
+lazy_static! {
+    static ref RE: Regex = Regex::new("([[:digit:]]*)d([[:digit:]])([+-]([[:digit:]]+))?").unwrap();
+}
+
+const REPEAT_MATCH: usize = 1;
+const MODIFIER_MATCH: usize = 3;
+const MODIFIER_OPERAND_MATCH: usize = 4;
+const SIDES_MATCH: usize = 2;
 
 #[derive(Debug, Eq, PartialEq)]
 struct RollDesc {
     repeat: u8,
+    sides: u8,
     modifier: RollModifier,
+}
+
+impl Default for RollDesc {
+    fn default() -> Self {
+        RollDesc {
+            repeat: 1,
+            sides: 6,
+            modifier: RollModifier::default(),
+        }
+    }
+}
+
+impl RollDesc {
+    fn execute(&self, roller: &mut impl Roller) -> i16 {
+        match self.modifier {
+            RollModifier::None => rolls(self.repeat, roller),
+            RollModifier::Plus(val) => rolls(self.repeat, roller) + val as i16,
+            RollModifier::Minus(val) => rolls(self.repeat, roller) - val as i16,
+            RollModifier::Squared => (roll(false, roller) * roll(false, roller)) as i16,
+            RollModifier::Hundo => (roll(false, roller) * 10 + roll(false, roller)) as i16,
+        }
+    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -43,44 +94,36 @@ impl Default for RollModifier {
     }
 }
 
-impl Default for RollDesc {
-    fn default() -> Self {
-        RollDesc {
-            repeat: 1,
-            modifier: RollModifier::default(),
+fn roll(explode: bool, roller: &mut impl Roller) -> u8 {
+    let mut sum = 0;
+    let mut done = false;
+
+    while !done {
+        let die = roller.roll(6);
+        sum += die;
+
+        // TODO: add a quiet option
+        println!("Rolled: {}", die);
+
+        if die != 6 || explode == false {
+            done = true
         }
-    }
-}
-
-fn roll() -> u8 {
-    let mut rng = thread_rng();
-    rng.gen_range(1..=6)
-}
-
-fn rolls(repeat: u8) -> i16 {
-    // TODO: rewrite this functionally.
-    let mut sum: i16 = 0;
-    for _ in 0..repeat {
-        sum += roll() as i16;
     }
 
     sum
 }
 
-impl RollDesc {
-    fn execute(&self) -> i16 {
-        match self.modifier {
-            RollModifier::None => rolls(self.repeat),
-            RollModifier::Plus(val) => rolls(self.repeat) + val as i16,
-            RollModifier::Minus(val) => rolls(self.repeat) - val as i16,
-            RollModifier::Squared => (roll() * roll()) as i16,
-            RollModifier::Hundo => (roll() * 10 + roll()) as i16,
-        }
-    }
+fn rolls(repeat: u8, roller: &mut impl Roller) -> i16 {
+    (0..repeat).map(|_| roll(true, roller) as i16).sum()
 }
 
-fn parse_repeat(s: &str) -> u8 {
-    s.parse::<u8>().unwrap_or(1)
+fn parse_repeat(s: &str) -> Result<u8> {
+    if s.is_empty() {
+        Ok(1)
+    } else {
+        s.parse()
+            .map_err(|err| FourADError::ParseRepeatError(s.to_string(), err))
+    }
 }
 
 fn parse_modifier(op: &str, value: &str) -> RollModifier {
@@ -98,10 +141,14 @@ fn parse_modifier(op: &str, value: &str) -> RollModifier {
     }
 }
 
-impl FromStr for RollDesc {
-    type Err = ();
+fn parse_sides(s: &str) -> Result<u8> {
+    s.parse::<u8>().map_err(|err|FourADError::BadSidesString(s.to_string(), err))
+}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl FromStr for RollDesc {
+    type Err = FourADError;
+
+    fn from_str(s: &str) -> Result<Self> {
         // What a cheaty special case.
         if s.starts_with("d6xd6") {
             return Ok(RollDesc {
@@ -109,32 +156,57 @@ impl FromStr for RollDesc {
                 ..RollDesc::default()
             });
         }
+
+        // What a cheaty special case.
         if s.starts_with("d66") {
             return Ok(RollDesc {
                 modifier: RollModifier::Hundo,
                 ..RollDesc::default()
             });
         }
-        // TODO: make this lazy static?
-        let re = Regex::new("([[:digit:]]*)d6([+-]([[:digit:]]+))?").unwrap();
-        if let Some(caps) = re.captures(s) {
-            let repeat = parse_repeat(caps.get(1).map(|m| m.as_str()).unwrap_or("1"));
+
+        if let Some(caps) = RE.captures(s) {
+            // TODO: fix error checking
+            let repeat = parse_repeat(caps.get(REPEAT_MATCH).map(|m| m.as_str()).unwrap_or("1")).unwrap();
+            // unwrap: the regex will not match unless there is a value here.
+            let sides = parse_sides(caps.get(SIDES_MATCH).map(|m| m.as_str()).unwrap())?;
             let modifier = parse_modifier(
-                caps.get(2).map(|m| m.as_str()).unwrap_or(""),
-                caps.get(3).map(|m| m.as_str()).unwrap_or(""),
+                caps.get(MODIFIER_MATCH).map(|m| m.as_str()).unwrap_or(""),
+                caps.get(MODIFIER_OPERAND_MATCH).map(|m| m.as_str()).unwrap_or(""),
             );
-            Ok(RollDesc { repeat, modifier })
+            Ok(RollDesc { repeat, modifier, sides, })
         } else {
-            Err(())
+            Err(FourADError::UnknownError)
         }
     }
 }
 
-fn main() {
-    // TODO: better error checking
+trait Roller {
+    fn roll(&mut self, sides: u8) -> u8;
+}
+
+struct RandRoller {
+    rng: ThreadRng,
+}
+
+impl Default for RandRoller {
+    fn default() -> Self {
+        RandRoller { rng: thread_rng() }
+    }
+}
+
+impl Roller for RandRoller {
+    fn roll(&mut self, sides: u8) -> u8 {
+        self.rng.gen_range(1..=sides)
+    }
+}
+
+fn main() -> std::result::Result<(), FourADError> {
     let arg = std::env::args().nth(1).unwrap_or_else(|| "d6".to_string());
-    let desc: RollDesc = arg.parse().unwrap_or_default();
-    println!("{}", desc.execute());
+    let desc: RollDesc = arg.parse()?;
+
+    println!("{}", desc.execute(&mut RandRoller::default()));
+    Ok(())
 }
 
 #[cfg(test)]
@@ -231,6 +303,17 @@ mod test {
             "d66".parse::<RollDesc>().unwrap(),
             RollDesc {
                 modifier: RollModifier::Hundo,
+                ..RollDesc::default()
+            }
+        )
+    }
+
+    #[test]
+    fn test_d3() {
+        assert_eq!(
+            "d3".parse::<RollDesc>().unwrap(),
+            RollDesc {
+                sides: 3,
                 ..RollDesc::default()
             }
         )
