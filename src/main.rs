@@ -55,7 +55,6 @@ impl Default for RollDesc {
 fn roll() -> u8 {
     let mut rng = thread_rng();
     rng.gen_range(1..=6)
-
 }
 
 fn rolls(repeat: u8) -> i16 {
@@ -133,12 +132,9 @@ impl FromStr for RollDesc {
 
 fn main() {
     // TODO: better error checking
-    if let Some(desc) = std::env::args()
-        .nth(1)
-        .map(|a| a.parse().unwrap_or(RollDesc::default()))
-    {
-        println!("{}", desc.execute());
-    }
+    let arg = std::env::args().nth(1).unwrap_or_else(|| "d6".to_string());
+    let desc: RollDesc = arg.parse().unwrap_or_default();
+    println!("{}", desc.execute());
 }
 
 #[cfg(test)]
