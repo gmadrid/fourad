@@ -1,6 +1,12 @@
 use rand::rngs::ThreadRng;
 use rand::{thread_rng, Rng};
 
+// A collection of non-random rollers to facilitate testing.
+#[cfg(test)]
+pub mod constroller;
+#[cfg(test)]
+pub mod iterroller;
+
 pub trait Roller {
     fn roll(&mut self, sides: u8) -> u8;
 }

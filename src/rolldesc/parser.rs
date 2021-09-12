@@ -1,7 +1,7 @@
+use crate::rolldesc::{RollDesc, RollModifier};
 use crate::{Error, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
-use crate::rolldesc::{RollModifier, RollDesc};
 
 // TODO: write a grammar and a parser for the dice codes. Regex won't allow good error reporting.
 
@@ -39,7 +39,8 @@ fn parse_modifier(op: &str, value: &str) -> RollModifier {
 }
 
 fn parse_sides(s: &str) -> Result<u8> {
-    s.parse::<u8>().map_err(|err|Error::BadSidesString(s.to_string(), err))
+    s.parse::<u8>()
+        .map_err(|err| Error::BadSidesString(s.to_string(), err))
 }
 
 pub fn parse_diecode(s: &str) -> Result<RollDesc> {
@@ -112,7 +113,6 @@ mod test {
             }
         )
     }
-
 
     #[test]
     fn repeat_modifier_2d6plus1() {

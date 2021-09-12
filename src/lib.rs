@@ -1,5 +1,5 @@
-use thiserror::Error;
 use crate::executor::execute;
+use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, FourADError>;
 
