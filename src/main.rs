@@ -10,7 +10,7 @@ struct Args {
 }
 
 fn main() -> fourad::Result<()> {
-    let args : Args = argh::from_env();
+    let args: Args = argh::from_env();
 
     // TODO: read from stdin if len == 0.
     let print_codes = args.codes.len() > 1;

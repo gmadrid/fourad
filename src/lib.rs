@@ -15,10 +15,8 @@ pub enum FourADError {
     #[error("Could not parse a number")]
     ParseNumberError(#[from] std::num::ParseIntError),
 
-
     #[error("'{0}' is not a legal value for the number of sides")]
     BadSidesString(String, std::num::ParseIntError),
-
 
     // Do not use this in new grammar.
     // TODO: delete this.

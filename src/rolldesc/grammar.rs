@@ -8,7 +8,6 @@
    // Arbitrary string of d6xd6xd6xd6
 */
 
-use crate::FourADError::UnexpectedEndOfString;
 use crate::{Error, Result};
 
 #[derive(Debug, Eq, PartialEq)]
@@ -45,7 +44,10 @@ pub struct Modifier {
 
 impl Default for Modifier {
     fn default() -> Self {
-        Modifier { op: Opcode::None, operand: 0 }
+        Modifier {
+            op: Opcode::None,
+            operand: 0,
+        }
     }
 }
 
@@ -138,7 +140,7 @@ fn parse_repeat(s: &str) -> Result<(Option<Repeat>, &str)> {
         } else {
             // This is the case where we find the beginning of the
             // repeat number, but there is nothing after it.
-            Err(UnexpectedEndOfString(s.to_string()))
+            Err(Error::UnexpectedEndOfString(s.to_string()))
         }
     } else {
         Ok((None, s))
@@ -161,33 +163,45 @@ fn parse_number(s: &str) -> Result<(u8, &str)> {
 }
 
 /*
-   modifier --> '+' operand
-            --> '-' operand
-            -->
- */
+  modifier --> '+' operand
+           --> '-' operand
+           -->
+*/
 fn parse_modifier(s: &str) -> Result<(Option<Modifier>, &str)> {
     if s.starts_with('+') {
         let (operand, rest) = parse_operand(&s[1..])?;
-        Ok((Some(Modifier { op: Opcode::Plus, operand}), rest))
+        Ok((
+            Some(Modifier {
+                op: Opcode::Plus,
+                operand,
+            }),
+            rest,
+        ))
     } else if s.starts_with('-') {
         let (operand, rest) = parse_operand(&s[1..])?;
-        Ok((Some(Modifier { op: Opcode::Minus, operand}), rest))
+        Ok((
+            Some(Modifier {
+                op: Opcode::Minus,
+                operand,
+            }),
+            rest,
+        ))
     } else {
         Ok((None, s))
     }
 }
 
 /*
-   operand --> number
- */
+  operand --> number
+*/
 fn parse_operand(s: &str) -> Result<(u8, &str)> {
     parse_number(s)
 }
 
 /*
-  directives --> 'E'
-             -->
- */
+ directives --> 'E'
+            -->
+*/
 fn parse_directives(s: &str) -> Result<(Option<Directives>, &str)> {
     if s.starts_with('E') {
         let directives = Directives { explode: true };
@@ -204,6 +218,6 @@ mod test {
     #[test]
     fn test_foobar() {
         let foo = parse_diecode("d6").unwrap();
-        assert_eq!(foo, DieCode { factors: vec![]});
+        assert_eq!(foo, DieCode { factors: vec![] });
     }
 }
