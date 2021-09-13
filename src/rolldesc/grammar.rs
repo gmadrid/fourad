@@ -46,25 +46,28 @@ impl Default for Repeat {
     }
 }
 
+// #[derive(Debug, Eq, PartialEq)]
+// pub struct Modifier {
+//     op: Opcode,
+// }
+//
+// impl Default for Modifier {
+//     fn default() -> Self {
+//         Modifier { op: Opcode::None }
+//     }
+// }
+
 #[derive(Debug, Eq, PartialEq)]
-pub struct Modifier {
-    // TODO: put the operand into the opcode. Otherwise, we have to
-    // supply a value when it's not needed.
-    op: Opcode,
-    //    operand: u8,
+pub enum Modifier {
+    None,
+    Plus(u8),
+    Minus(u8),
 }
 
 impl Default for Modifier {
     fn default() -> Self {
-        Modifier { op: Opcode::None }
+        Modifier::None
     }
-}
-
-#[derive(Debug, Eq, PartialEq)]
-pub enum Opcode {
-    None,
-    Plus(u8),
-    Minus(u8),
 }
 
 #[derive(Debug, Default, Eq, PartialEq)]
@@ -178,25 +181,14 @@ fn parse_number(s: &str) -> Result<(u8, &str)> {
            -->
 */
 fn parse_modifier(s: &str) -> Result<(Modifier, &str)> {
-    // TODO: modifier is a do-nothing extra layer of data structures.
     if s.starts_with('+') {
         let (operand, rest) = parse_operand(&s[1..])?;
-        Ok((
-            Modifier {
-                op: Opcode::Plus(operand),
-            },
-            rest,
-        ))
+        Ok((Modifier::Plus(operand), rest))
     } else if s.starts_with('-') {
         let (operand, rest) = parse_operand(&s[1..])?;
-        Ok((
-            Modifier {
-                op: Opcode::Minus(operand),
-            },
-            rest,
-        ))
+        Ok((Modifier::Minus(operand), rest))
     } else {
-        Ok((Modifier { op: Opcode::None }, s))
+        Ok((Modifier::None, s))
     }
 }
 
@@ -249,16 +241,12 @@ mod test {
                     Factor::default(),
                     Factor {
                         repeat: Repeat { number: 2 },
-                        modifier: Modifier {
-                            op: Opcode::Plus(1)
-                        },
+                        modifier: Modifier::Plus(1),
                         ..Factor::default()
                     },
                     Factor {
                         sides: 3,
-                        modifier: Modifier {
-                            op: Opcode::Minus(2)
-                        },
+                        modifier: Modifier::Minus(2),
                         directives: Directives { explode: true },
                         ..Factor::default()
                     },
@@ -286,9 +274,7 @@ mod test {
             Factor {
                 repeat: Repeat { number: 3 },
                 sides: 12,
-                modifier: Modifier {
-                    op: Opcode::Minus(3)
-                },
+                modifier: Modifier::Minus(3),
                 directives: Directives { explode: true },
             }
         )
@@ -336,17 +322,17 @@ mod test {
     #[test]
     fn test_parse_modifier() {
         let (modifier, rest) = parse_modifier("NONE").unwrap();
-        assert_eq!(modifier.op, Opcode::None);
+        assert_eq!(modifier, Modifier::None);
         assert_eq!(rest, "NONE");
 
         // PLUS, AT END
         let (modifier, rest) = parse_modifier("+38").unwrap();
-        assert_eq!(modifier.op, Opcode::Plus(38));
+        assert_eq!(modifier, Modifier::Plus(38));
         assert_eq!(rest, "");
 
         // MINUS, WITH REST
         let (modifier, rest) = parse_modifier("-83REST").unwrap();
-        assert_eq!(modifier.op, Opcode::Minus(83));
+        assert_eq!(modifier, Modifier::Minus(83));
         assert_eq!(rest, "REST");
     }
 
