@@ -96,7 +96,7 @@ pub fn parse_diecode(s: &str) -> Result<DieCode> {
           -->
 */
 fn parse_codetail(s: &str, factors: &mut Vec<Factor>) -> Result<()> {
-    if let Some(ch) = s.chars().nth(0) {
+    if let Some(ch) = s.chars().next() {
         if ch == 'x' {
             let (factor, rest) = parse_factor(&s[1..])?;
             factors.push(factor);
@@ -116,7 +116,7 @@ fn parse_codetail(s: &str, factors: &mut Vec<Factor>) -> Result<()> {
 fn parse_factor(s: &str) -> Result<(Factor, &str)> {
     let (repeat, rest) = parse_repeat(s)?;
 
-    if let Some(ch) = rest.chars().nth(0) {
+    if let Some(ch) = rest.chars().next() {
         if ch != 'd' {
             return Err(Error::UnexpectedChar('d', rest.to_string()));
         }
@@ -192,11 +192,11 @@ fn parse_number(s: &str) -> Result<(u8, &str)> {
            -->
 */
 fn parse_modifier(s: &str) -> Result<(Modifier, &str)> {
-    if s.starts_with('+') {
-        let (operand, rest) = parse_operand(&s[1..])?;
+    if let Some(rest) = s.strip_prefix('+') {
+        let (operand, rest) = parse_operand(rest)?;
         Ok((Modifier::Plus(operand), rest))
-    } else if s.starts_with('-') {
-        let (operand, rest) = parse_operand(&s[1..])?;
+    } else if let Some(rest) = s.strip_prefix('-') {
+        let (operand, rest) = parse_operand(rest)?;
         Ok((Modifier::Minus(operand), rest))
     } else {
         Ok((Modifier::None, s))
@@ -215,12 +215,8 @@ fn parse_operand(s: &str) -> Result<(u8, &str)> {
             -->
 */
 fn parse_directives(s: &str) -> Result<(Directives, &str)> {
-    if s.starts_with('E') {
-        let directives = Directives {
-            explode: true,
-            ..Directives::default()
-        };
-        Ok((directives, &s[1..]))
+    if let Some(rest) = s.strip_prefix('E') {
+        Ok((Directives { explode: true }, rest))
     } else {
         Ok((Directives::default(), s))
     }
@@ -268,7 +264,7 @@ mod test {
 
     #[test]
     fn test_parse_factor() {
-        let (factor, rest) = parse_factor("d6").unwrap();
+        let (factor, _) = parse_factor("d6").unwrap();
         assert_eq!(
             factor,
             Factor {
@@ -279,7 +275,7 @@ mod test {
             }
         );
 
-        let (factor, rest) = parse_factor("3d12-3E").unwrap();
+        let (factor, _) = parse_factor("3d12-3E").unwrap();
         assert_eq!(
             factor,
             Factor {
