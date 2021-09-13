@@ -23,6 +23,18 @@ pub struct Factor {
     directives: Directives,
 }
 
+impl Default for Factor {
+    // The default Factor is "d6"
+    fn default() -> Self {
+        Factor {
+            repeat: Default::default(),
+            sides: 6,
+            modifier: Default::default(),
+            directives: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Eq, PartialEq)]
 pub struct Repeat {
     number: u8,
@@ -39,23 +51,20 @@ pub struct Modifier {
     // TODO: put the operand into the opcode. Otherwise, we have to
     // supply a value when it's not needed.
     op: Opcode,
-    operand: u8,
+    //    operand: u8,
 }
 
 impl Default for Modifier {
     fn default() -> Self {
-        Modifier {
-            op: Opcode::None,
-            operand: 0,
-        }
+        Modifier { op: Opcode::None }
     }
 }
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Opcode {
     None,
-    Plus,
-    Minus,
+    Plus(u8),
+    Minus(u8),
 }
 
 #[derive(Debug, Default, Eq, PartialEq)]
@@ -117,10 +126,10 @@ fn parse_factor(s: &str) -> Result<(Factor, &str)> {
     let (directives, rest) = parse_directives(rest)?;
 
     let factor = Factor {
-        repeat: repeat.unwrap_or_default(),
+        repeat: repeat,
         sides,
-        modifier: modifier.unwrap_or_default(),
-        directives: directives.unwrap_or_default(),
+        modifier: modifier,
+        directives: directives,
     };
     Ok((factor, rest))
 }
@@ -129,21 +138,22 @@ fn parse_factor(s: &str) -> Result<(Factor, &str)> {
    repeat --> number
           -->
 */
-fn parse_repeat(s: &str) -> Result<(Option<Repeat>, &str)> {
+fn parse_repeat(s: &str) -> Result<(Repeat, &str)> {
     if s.starts_with(|ch: char| ch.is_ascii_digit()) {
         // Find the first ch that is not a digit.
         // TODO: you could do this as a single call to find and skip the starts_with
         if let Some(end) = s.find(|ch: char| !ch.is_ascii_digit()) {
             let number = s[..end].parse::<u8>()?;
             let repeat = Repeat { number };
-            Ok((Some(repeat), &s[end..]))
+            Ok((repeat, &s[end..]))
         } else {
             // This is the case where we find the beginning of the
             // repeat number, but there is nothing after it.
             Err(Error::UnexpectedEndOfString(s.to_string()))
         }
     } else {
-        Ok((None, s))
+        // A missing Repeat is equivalent to a '1'.
+        Ok((Repeat { number: 1 }, s))
     }
 }
 
@@ -167,27 +177,26 @@ fn parse_number(s: &str) -> Result<(u8, &str)> {
            --> '-' operand
            -->
 */
-fn parse_modifier(s: &str) -> Result<(Option<Modifier>, &str)> {
+fn parse_modifier(s: &str) -> Result<(Modifier, &str)> {
+    // TODO: modifier is a do-nothing extra layer of data structures.
     if s.starts_with('+') {
         let (operand, rest) = parse_operand(&s[1..])?;
         Ok((
-            Some(Modifier {
-                op: Opcode::Plus,
-                operand,
-            }),
+            Modifier {
+                op: Opcode::Plus(operand),
+            },
             rest,
         ))
     } else if s.starts_with('-') {
         let (operand, rest) = parse_operand(&s[1..])?;
         Ok((
-            Some(Modifier {
-                op: Opcode::Minus,
-                operand,
-            }),
+            Modifier {
+                op: Opcode::Minus(operand),
+            },
             rest,
         ))
     } else {
-        Ok((None, s))
+        Ok((Modifier { op: Opcode::None }, s))
     }
 }
 
@@ -202,12 +211,15 @@ fn parse_operand(s: &str) -> Result<(u8, &str)> {
  directives --> 'E'
             -->
 */
-fn parse_directives(s: &str) -> Result<(Option<Directives>, &str)> {
+fn parse_directives(s: &str) -> Result<(Directives, &str)> {
     if s.starts_with('E') {
-        let directives = Directives { explode: true };
-        Ok((Some(directives), &s[1..]))
+        let directives = Directives {
+            explode: true,
+            ..Directives::default()
+        };
+        Ok((directives, &s[1..]))
     } else {
-        Ok((None, s))
+        Ok((Directives::default(), s))
     }
 }
 
@@ -215,9 +227,158 @@ fn parse_directives(s: &str) -> Result<(Option<Directives>, &str)> {
 mod test {
     use super::*;
 
+    // TODO: check that sides != 0.
+    // TODO: check that repeat != 0.
+
     #[test]
-    fn test_foobar() {
-        let foo = parse_diecode("d6").unwrap();
-        assert_eq!(foo, DieCode { factors: vec![] });
+    fn test_parse_diecode() {
+        let diecode = parse_diecode("d6").unwrap();
+        assert_eq!(1, diecode.factors.len());
+
+        let diecode = parse_diecode("d6xd6xd6").unwrap();
+        assert_eq!(3, diecode.factors.len());
+    }
+
+    #[test]
+    fn test_parse_diecode_deep() {
+        let diecode = parse_diecode("d6x2d6+1xd3-2E").unwrap();
+        assert_eq!(
+            diecode,
+            DieCode {
+                factors: vec![
+                    Factor::default(),
+                    Factor {
+                        repeat: Repeat { number: 2 },
+                        modifier: Modifier {
+                            op: Opcode::Plus(1)
+                        },
+                        ..Factor::default()
+                    },
+                    Factor {
+                        sides: 3,
+                        modifier: Modifier {
+                            op: Opcode::Minus(2)
+                        },
+                        directives: Directives { explode: true },
+                        ..Factor::default()
+                    },
+                ]
+            }
+        )
+    }
+
+    #[test]
+    fn test_parse_factor() {
+        let (factor, rest) = parse_factor("d6").unwrap();
+        assert_eq!(
+            factor,
+            Factor {
+                repeat: Default::default(),
+                sides: 6,
+                modifier: Default::default(),
+                directives: Default::default()
+            }
+        );
+
+        let (factor, rest) = parse_factor("3d12-3E").unwrap();
+        assert_eq!(
+            factor,
+            Factor {
+                repeat: Repeat { number: 3 },
+                sides: 12,
+                modifier: Modifier {
+                    op: Opcode::Minus(3)
+                },
+                directives: Directives { explode: true },
+            }
+        )
+    }
+
+    #[test]
+    fn test_parse_repeat() {
+        let (repeat, rest) = parse_repeat("8d6").unwrap();
+        assert_eq!(repeat, Repeat { number: 8 });
+        assert_eq!(rest, "d6");
+
+        let (repeat, rest) = parse_repeat("d6").unwrap();
+        assert_eq!(repeat, Repeat { number: 1 });
+        assert_eq!(rest, "d6");
+    }
+
+    #[test]
+    fn test_parse_sides() {
+        let (sides, rest) = parse_sides("3").unwrap();
+        assert_eq!(sides, 3);
+        assert_eq!(rest, "");
+
+        let (sides, rest) = parse_sides("6+3").unwrap();
+        assert_eq!(sides, 6);
+        assert_eq!(rest, "+3");
+    }
+
+    #[test]
+    fn test_parse_number() {
+        let (number, rest) = parse_number("64REST").unwrap();
+        assert_eq!(number, 64);
+        assert_eq!(rest, "REST");
+
+        let (number, rest) = parse_number("83").unwrap();
+        assert_eq!(number, 83);
+        assert_eq!(rest, "");
+
+        let err = parse_number("888").unwrap_err();
+        assert!(matches!(err, Error::ParseNumberError(_)));
+
+        let err = parse_number("MISSING").unwrap_err();
+        assert!(matches!(err, Error::ParseNumberError(_)));
+    }
+
+    #[test]
+    fn test_parse_modifier() {
+        let (modifier, rest) = parse_modifier("NONE").unwrap();
+        assert_eq!(modifier.op, Opcode::None);
+        assert_eq!(rest, "NONE");
+
+        // PLUS, AT END
+        let (modifier, rest) = parse_modifier("+38").unwrap();
+        assert_eq!(modifier.op, Opcode::Plus(38));
+        assert_eq!(rest, "");
+
+        // MINUS, WITH REST
+        let (modifier, rest) = parse_modifier("-83REST").unwrap();
+        assert_eq!(modifier.op, Opcode::Minus(83));
+        assert_eq!(rest, "REST");
+    }
+
+    #[test]
+    fn test_parse_operand() {
+        let (operand, rest) = parse_operand("123REST").unwrap();
+        assert_eq!(operand, 123);
+        assert_eq!(rest, "REST");
+
+        // TOO BIG
+        let err = parse_operand("1234REST").unwrap_err();
+        assert!(matches!(err, Error::ParseNumberError(_)));
+
+        // MISSING
+        let err = parse_operand("MISSING").unwrap_err();
+        assert!(matches!(err, Error::ParseNumberError(_)));
+    }
+
+    #[test]
+    fn test_parse_directives() {
+        let (directives, rest) = parse_directives("").unwrap();
+        assert_eq!(directives, Directives::default());
+        assert_eq!(rest, "");
+
+        let (directives, rest) = parse_directives("EEE").unwrap();
+        assert_eq!(
+            directives,
+            Directives {
+                explode: true,
+                ..Directives::default()
+            }
+        );
+        assert_eq!(rest, "EE");
     }
 }
