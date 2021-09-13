@@ -23,6 +23,12 @@ pub enum FourADError {
     #[error("'{0}' is not a legal repeat string")]
     ParseRepeatError(String, std::num::ParseIntError),
 
+    #[error("Dice cannot have zero sides or one side.")]
+    ZeroOrOneSide,
+
+    #[error("Repeating zero times is not allowed")]
+    ZeroRepeats,
+
     // TODO: get rid of UnknownError
     #[error("an unknown error has occurred. This should never happen.")]
     UnknownError,

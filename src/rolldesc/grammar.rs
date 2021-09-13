@@ -145,10 +145,15 @@ fn parse_repeat(s: &str) -> Result<(Repeat, &str)> {
     if s.starts_with(|ch: char| ch.is_ascii_digit()) {
         // Find the first ch that is not a digit.
         // TODO: you could do this as a single call to find and skip the starts_with
+        // TODO: should be using parse_number here.
         if let Some(end) = s.find(|ch: char| !ch.is_ascii_digit()) {
             let number = s[..end].parse::<u8>()?;
-            let repeat = Repeat { number };
-            Ok((repeat, &s[end..]))
+            if number == 0 {
+                Err(Error::ZeroRepeats)
+            } else {
+                let repeat = Repeat { number };
+                Ok((repeat, &s[end..]))
+            }
         } else {
             // This is the case where we find the beginning of the
             // repeat number, but there is nothing after it.
@@ -161,7 +166,13 @@ fn parse_repeat(s: &str) -> Result<(Repeat, &str)> {
 }
 
 fn parse_sides(s: &str) -> Result<(u8, &str)> {
-    parse_number(s)
+    parse_number(s).and_then(|(sides, rest)| {
+        if sides == 0 || sides == 1 {
+            Err(Error::ZeroOrOneSide)
+        } else {
+            Ok((sides, rest))
+        }
+    })
 }
 
 /*
@@ -289,6 +300,9 @@ mod test {
         let (repeat, rest) = parse_repeat("d6").unwrap();
         assert_eq!(repeat, Repeat { number: 1 });
         assert_eq!(rest, "d6");
+
+        let err = parse_repeat("0d6").unwrap_err();
+        assert!(matches!(err, Error::ZeroRepeats));
     }
 
     #[test]
@@ -300,6 +314,12 @@ mod test {
         let (sides, rest) = parse_sides("6+3").unwrap();
         assert_eq!(sides, 6);
         assert_eq!(rest, "+3");
+
+        let err = parse_sides("0").unwrap_err();
+        assert!(matches!(err, Error::ZeroOrOneSide));
+
+        let err = parse_sides("1").unwrap_err();
+        assert!(matches!(err, Error::ZeroOrOneSide));
     }
 
     #[test]
