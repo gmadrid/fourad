@@ -1,6 +1,7 @@
 use crate::grammar::{DieCode, Factor, Modifier};
 use crate::roller::RandRoller;
 use crate::roller::Roller;
+use std::ops::ControlFlow;
 
 pub fn execute(code: DieCode, explodes: bool) -> i16 {
     execute_with_roller(code, explodes, &mut RandRoller::default())
@@ -42,22 +43,19 @@ impl Executor {
             return self.roll_d66(roller);
         }
 
-        let mut sum = 0i16;
-        let mut done = false;
-
-        while !done {
-            let die = roller.roll(sides);
-            sum += die as i16;
-
+        match std::iter::repeat_with(|| roller.roll(sides))
             // TODO: add a quiet option
-            println!("Rolled: {}", die);
-
-            if die != 6 || !explode {
-                done = true
-            }
+            .inspect(|die| println!("Rolled: {}", die))
+            .try_fold(0, |sum, die| {
+                if die != 6 || !explode {
+                    ControlFlow::Break(sum + die)
+                } else {
+                    ControlFlow::Continue(sum + die)
+                }
+            }) {
+            ControlFlow::Break(sum) => sum as i16,
+            _ => panic!("This shouldn't happen"),
         }
-
-        sum
     }
 
     fn roll_d66(&self, roller: &mut impl Roller) -> i16 {
