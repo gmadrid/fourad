@@ -20,7 +20,7 @@ impl<I> Roller for IterRoller<I>
 where
     I: Iterator<Item = u8>,
 {
-    fn roll(&mut self, sides: u8) -> u8 {
+    fn roll(&mut self, _sides: u8) -> u8 {
         // unwrap: this is for testing. The creator should ensure enough values for their use case.
         self.i.next().unwrap()
     }

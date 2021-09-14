@@ -40,6 +40,6 @@ mod executor;
 mod rolldesc;
 mod roller;
 
-pub fn roll(diecode: &str) -> Result<i16> {
-    Ok(execute(diecode.parse()?, true))
+pub fn roll(diecode: &str, explodes: bool) -> Result<i16> {
+    Ok(execute(diecode.parse()?, explodes))
 }

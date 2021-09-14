@@ -9,18 +9,27 @@
 */
 
 use crate::{Error, Result};
+use std::str::FromStr;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct DieCode {
-    factors: Vec<Factor>,
+    pub factors: Vec<Factor>,
+}
+
+impl FromStr for DieCode {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        parse_diecode(s)
+    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Factor {
-    repeat: Repeat,
-    sides: u8,
-    modifier: Modifier,
-    directives: Directives,
+    pub repeat: Repeat,
+    pub sides: u8,
+    pub modifier: Modifier,
+    pub directives: Directives,
 }
 
 impl Default for Factor {
@@ -37,7 +46,7 @@ impl Default for Factor {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Repeat {
-    number: u8,
+    pub number: u8,
 }
 
 impl Default for Repeat {
@@ -45,17 +54,6 @@ impl Default for Repeat {
         Repeat { number: 1 }
     }
 }
-
-// #[derive(Debug, Eq, PartialEq)]
-// pub struct Modifier {
-//     op: Opcode,
-// }
-//
-// impl Default for Modifier {
-//     fn default() -> Self {
-//         Modifier { op: Opcode::None }
-//     }
-// }
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Modifier {

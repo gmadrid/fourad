@@ -1,67 +1,83 @@
-use crate::rolldesc::{RollDesc, RollModifier};
+use crate::rolldesc::{DieCode, Factor, Modifier};
 use crate::roller::RandRoller;
 use crate::roller::Roller;
 
-pub fn execute(desc: RollDesc, explodes: bool) -> i16 {
-    execute_with_roller(desc, explodes, &mut RandRoller::default())
+// TODO: add an --explodes command line flag.
+// TODO: move the directives to the end of the entire code, not per factor.
+pub fn execute(code: DieCode, explodes: bool) -> i16 {
+    execute_with_roller(code, explodes, &mut RandRoller::default())
 }
 
-fn execute_with_roller<R>(desc: RollDesc, explodes: bool, roller: &mut R) -> i16
+pub fn execute_with_roller<R>(code: DieCode, explodes: bool, roller: &mut R) -> i16
 where
     R: Roller,
 {
-    Executor { explodes, desc }.execute(roller)
+    Executor { code, explodes }.execute(roller)
 }
 
 struct Executor {
+    code: DieCode,
     explodes: bool,
-    desc: RollDesc,
-}
-
-fn roll(explode: bool, roller: &mut impl Roller, sides: u8) -> u8 {
-    let mut sum = 0;
-    let mut done = false;
-
-    while !done {
-        let die = roller.roll(sides);
-        sum += die;
-
-        // TODO: add a quiet option
-        println!("Rolled: {}", die);
-
-        if die != 6 || !explode {
-            done = true
-        }
-    }
-
-    sum
-}
-
-fn rolls(repeat: u8, roller: &mut impl Roller, sides: u8) -> i16 {
-    (0..repeat).map(|_| roll(true, roller, sides) as i16).sum()
 }
 
 impl Executor {
-    fn execute<R>(&self, roller: &mut R) -> i16
-    where
-        R: Roller,
-    {
-        match self.desc.modifier {
-            RollModifier::None => rolls(self.desc.repeat, roller, self.desc.sides),
-            RollModifier::Plus(val) => {
-                rolls(self.desc.repeat, roller, self.desc.sides) + val as i16
-            }
-            RollModifier::Minus(val) => {
-                rolls(self.desc.repeat, roller, self.desc.sides) - val as i16
-            }
-            RollModifier::Squared => {
-                (roll(false, roller, self.desc.sides) * roll(false, roller, self.desc.sides)) as i16
-            }
-            RollModifier::Hundo => {
-                (roll(false, roller, self.desc.sides) * 10 + roll(false, roller, self.desc.sides))
-                    as i16
+    fn execute(&self, roller: &mut impl Roller) -> i16 {
+        self.code
+            .factors
+            .iter()
+            .map(|f| self.execute_factor(f, roller))
+            .product()
+    }
+
+    fn execute_factor(&self, factor: &Factor, roller: &mut impl Roller) -> i16 {
+        let total = (0..factor.repeat.number)
+            .map(|_| self.roll(factor.sides, self.explode(), roller))
+            .sum();
+
+        self.modify(&factor.modifier, total)
+    }
+
+    fn roll(&self, sides: u8, explode: bool, roller: &mut impl Roller) -> i16 {
+        if sides == 66 {
+            // special case!
+            // TODO: add a flag to allow rolling an actual d66.
+            return self.roll_d66(roller);
+        }
+
+        let mut sum = 0i16;
+        let mut done = false;
+
+        while !done {
+            let die = roller.roll(sides);
+            sum += die as i16;
+
+            // TODO: add a quiet option
+            println!("Rolled: {}", die);
+
+            if die != 6 || !explode {
+                done = true
             }
         }
+
+        sum
+    }
+
+    fn roll_d66(&self, roller: &mut impl Roller) -> i16 {
+        // d66 *never* explodes.
+        self.roll(6, false, roller) * 10 + self.roll(6, false, roller)
+    }
+
+    fn modify(&self, modifier: &Modifier, unmodified: i16) -> i16 {
+        unmodified
+            + match modifier {
+                Modifier::None => 0i16,
+                Modifier::Plus(operand) => *operand as i16,
+                Modifier::Minus(operand) => -(*operand as i16),
+            }
+    }
+
+    fn explode(&self) -> bool {
+        self.explodes
     }
 }
 

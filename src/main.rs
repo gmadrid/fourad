@@ -19,7 +19,8 @@ fn main() -> fourad::Result<()> {
         if print_codes {
             println!("{}", code);
         }
-        println!("===> {}", fourad::roll(&code)?);
+        // TODO: add an --explodes switch
+        println!("===> {}", fourad::roll(&code, true)?);
         if print_codes {
             println!()
         }
