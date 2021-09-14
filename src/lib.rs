@@ -1,5 +1,10 @@
-use crate::executor::execute;
 use thiserror::Error;
+
+mod executor;
+use executor::execute;
+
+mod grammar;
+mod roller;
 
 pub type Result<T> = std::result::Result<T, FourADError>;
 
@@ -23,10 +28,6 @@ pub enum FourADError {
 }
 
 pub type Error = FourADError;
-
-mod executor;
-mod rolldesc;
-mod roller;
 
 pub fn roll(diecode: &str, explodes: bool) -> Result<i16> {
     Ok(execute(diecode.parse()?, explodes))

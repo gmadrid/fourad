@@ -1,4 +1,4 @@
-use crate::rolldesc::{DieCode, Factor, Modifier};
+use crate::grammar::{DieCode, Factor, Modifier};
 use crate::roller::RandRoller;
 use crate::roller::Roller;
 
