@@ -18,7 +18,7 @@ struct Args {
     force_66: bool,
 }
 
-fn process_stdin(explode: bool, force_66:  bool) -> fourad::Result<()> {
+fn process_stdin(explode: bool, force_66: bool) -> fourad::Result<()> {
     let input = BufReader::new(std::io::stdin());
 
     for line in input.lines() {

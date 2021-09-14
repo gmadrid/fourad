@@ -11,7 +11,12 @@ pub fn execute_with_roller<R>(code: DieCode, explode: bool, force_66: bool, roll
 where
     R: Roller,
 {
-    Executor { code, explode, force_66 }.execute(roller)
+    Executor {
+        code,
+        explode,
+        force_66,
+    }
+    .execute(roller)
 }
 
 struct Executor {
@@ -47,7 +52,7 @@ impl Executor {
             // TODO: add a quiet option
             .inspect(|die| println!("Rolled: {}", die))
             .try_fold(0, |sum, die| {
-                if die != 6 || !explode {
+                if sides != 6 || die != 6 || !explode {
                     ControlFlow::Break(sum + die)
                 } else {
                     ControlFlow::Continue(sum + die)
@@ -86,7 +91,7 @@ mod test {
     fn test_basic() {
         let mut roller = IterRoller::new(vec![3, 4, 5, 1, 1, 1, 1, 1].into_iter());
         assert_eq!(
-            execute_with_roller("d6".parse().unwrap(), true, &mut roller),
+            execute_with_roller("d6".parse().unwrap(), true, false, &mut roller),
             3
         );
     }
@@ -95,7 +100,7 @@ mod test {
     fn test_basic_exploding() {
         let mut roller = IterRoller::new(vec![6, 6, 3, 4, 5, 1, 1, 1, 1, 1].into_iter());
         assert_eq!(
-            execute_with_roller("d6".parse().unwrap(), true, &mut roller),
+            execute_with_roller("d6".parse().unwrap(), true, false, &mut roller),
             15
         );
     }
@@ -104,7 +109,7 @@ mod test {
     fn test_two_exploding() {
         let mut roller = IterRoller::new(vec![6, 6, 3, 6, 5, 1, 1, 1, 1, 1].into_iter());
         assert_eq!(
-            execute_with_roller("2d6".parse().unwrap(), true, &mut roller),
+            execute_with_roller("2d6".parse().unwrap(), true, false, &mut roller),
             26
         );
     }
@@ -113,7 +118,7 @@ mod test {
     fn test_plusmod() {
         let mut roller = IterRoller::new(vec![3, 4, 5, 1, 1, 1, 1, 1].into_iter());
         assert_eq!(
-            execute_with_roller("d6+4".parse().unwrap(), true, &mut roller),
+            execute_with_roller("d6+4".parse().unwrap(), true, false, &mut roller),
             7
         );
     }
@@ -122,7 +127,7 @@ mod test {
     fn test_minusmod() {
         let mut roller = IterRoller::new(vec![3, 4, 5, 1, 1, 1, 1, 1].into_iter());
         assert_eq!(
-            execute_with_roller("d6-2".parse().unwrap(), true, &mut roller),
+            execute_with_roller("d6-2".parse().unwrap(), true, false, &mut roller),
             1
         );
     }
@@ -131,7 +136,7 @@ mod test {
     fn test_negative_result() {
         let mut roller = IterRoller::new(vec![3, 4, 5, 1, 1, 1, 1, 1].into_iter());
         assert_eq!(
-            execute_with_roller("d6-7".parse().unwrap(), true, &mut roller),
+            execute_with_roller("d6-7".parse().unwrap(), true, false, &mut roller),
             -4
         );
     }
@@ -140,7 +145,7 @@ mod test {
     fn test_d66() {
         let mut roller = IterRoller::new(vec![3, 4, 5, 1, 1, 1, 1, 1].into_iter());
         assert_eq!(
-            execute_with_roller("d66".parse().unwrap(), false, &mut roller),
+            execute_with_roller("d66".parse().unwrap(), false, false, &mut roller),
             34
         );
     }
@@ -149,8 +154,32 @@ mod test {
     fn test_d6xd6() {
         let mut roller = IterRoller::new(vec![3, 6, 4, 1, 1, 1, 1, 1].into_iter());
         assert_eq!(
-            execute_with_roller("d6xd6".parse().unwrap(), false, &mut roller),
+            execute_with_roller("d6xd6".parse().unwrap(), false, false, &mut roller),
             18
+        );
+    }
+
+    #[test]
+    fn test_only_explode_d6() {
+        let mut roller = IterRoller::new(vec![7, 6, 4, 1, 1, 1, 1, 1].into_iter());
+        assert_eq!(
+            execute_with_roller("2d7".parse().unwrap(), true, false, &mut roller),
+            13
+        )
+    }
+
+    #[test]
+    fn test_force_d66() {
+        let mut roller = IterRoller::new(vec![5, 6, 4, 1, 1, 1, 1, 1].into_iter());
+        assert_eq!(
+            execute_with_roller("d66".parse().unwrap(), true, false, &mut roller),
+            56
+        );
+
+        let mut roller = IterRoller::new(vec![5, 6, 4, 1, 1, 1, 1, 1].into_iter());
+        assert_eq!(
+            execute_with_roller("d66".parse().unwrap(), true, true, &mut roller),
+            5
         );
     }
 }
