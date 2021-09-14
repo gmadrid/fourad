@@ -127,10 +127,10 @@ fn parse_factor(s: &str) -> Result<(Factor, &str)> {
     let (directives, rest) = parse_directives(rest)?;
 
     let factor = Factor {
-        repeat: repeat,
+        repeat,
         sides,
-        modifier: modifier,
-        directives: directives,
+        modifier,
+        directives,
     };
     Ok((factor, rest))
 }
