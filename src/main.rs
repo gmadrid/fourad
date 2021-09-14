@@ -2,7 +2,6 @@ use argh::FromArgs;
 use std::io::{BufRead, BufReader};
 
 // TODO: improve output formatting.
-// TODO: change 'explode' and 'explodes' to be consistent.
 
 #[derive(FromArgs)]
 /// A dice roller for _Four Against Darkness_
@@ -19,21 +18,21 @@ struct Args {
     force_66: bool,
 }
 
-fn process_stdin(explodes: bool, force_66:  bool) -> fourad::Result<()> {
+fn process_stdin(explode: bool, force_66:  bool) -> fourad::Result<()> {
     let input = BufReader::new(std::io::stdin());
 
     for line in input.lines() {
         let line = line?;
-        output_code(&line, explodes, true, force_66)?;
+        output_code(&line, explode, true, force_66)?;
     }
     Ok(())
 }
 
-fn output_code(s: &str, explodes: bool, print_codes: bool, force_66: bool) -> fourad::Result<()> {
+fn output_code(s: &str, explode: bool, print_codes: bool, force_66: bool) -> fourad::Result<()> {
     if print_codes {
         println!("{}", s);
     }
-    println!("===> {}", fourad::roll(&s, explodes, force_66)?);
+    println!("===> {}", fourad::roll(s, explode, force_66)?);
     if print_codes {
         println!()
     }

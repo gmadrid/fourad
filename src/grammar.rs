@@ -3,7 +3,7 @@
    d6xd10
    d66, d88 (deal with ambiguity)
 
-   d6E  (explodes!)
+   d6E  (explode!)
 
    // Arbitrary string of d6xd6xd6xd6
 */
