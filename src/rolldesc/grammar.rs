@@ -76,7 +76,7 @@ pub struct Directives {
 /*
   Arbitrary string of d6xd6xd6xd6
 
-  diecode  --> factor codetail
+  GRAMMAR: diecode    --> factor codetail
 */
 pub fn parse_diecode(s: &str) -> Result<DieCode> {
     let mut factors = vec![];
@@ -90,8 +90,8 @@ pub fn parse_diecode(s: &str) -> Result<DieCode> {
 }
 
 /*
- codetail --> 'x' factor codetail
-          -->
+  GRAMMAR: codetail   --> 'x' factor codetail
+  GRAMMAR:            -->
 */
 fn parse_codetail(s: &str, factors: &mut Vec<Factor>) -> Result<()> {
     if let Some(ch) = s.chars().next() {
@@ -109,7 +109,7 @@ fn parse_codetail(s: &str, factors: &mut Vec<Factor>) -> Result<()> {
 }
 
 /*
-   factor --> repeat 'd' sides modifier directives
+  GRAMMAR: factor     --> repeat 'd' sides modifier directives
 */
 fn parse_factor(s: &str) -> Result<(Factor, &str)> {
     let (repeat, rest) = parse_repeat(s)?;
@@ -136,8 +136,8 @@ fn parse_factor(s: &str) -> Result<(Factor, &str)> {
 }
 
 /*
-   repeat --> number
-          -->
+  GRAMMAR: repeat     --> number
+  GRAMMAR:            -->
 */
 fn parse_repeat(s: &str) -> Result<(Repeat, &str)> {
     if s.starts_with(|ch: char| ch.is_ascii_digit()) {
@@ -174,7 +174,7 @@ fn parse_sides(s: &str) -> Result<(u8, &str)> {
 }
 
 /*
-  number --> [[:digit:]]+
+  GRAMMAR: number     --> [[:digit:]]+
 */
 fn parse_number(s: &str) -> Result<(u8, &str)> {
     if let Some(end) = s.find(|ch: char| !ch.is_ascii_digit()) {
@@ -185,9 +185,9 @@ fn parse_number(s: &str) -> Result<(u8, &str)> {
 }
 
 /*
-  modifier --> '+' operand
-           --> '-' operand
-           -->
+  GRAMMAR: modifier   --> '+' operand
+  GRAMMAR:            --> '-' operand
+  GRAMMAR:            -->
 */
 fn parse_modifier(s: &str) -> Result<(Modifier, &str)> {
     if let Some(rest) = s.strip_prefix('+') {
@@ -202,15 +202,15 @@ fn parse_modifier(s: &str) -> Result<(Modifier, &str)> {
 }
 
 /*
-  operand --> number
+  GRAMMAR: operand    --> number
 */
 fn parse_operand(s: &str) -> Result<(u8, &str)> {
     parse_number(s)
 }
 
 /*
- directives --> 'E'
-            -->
+  GRAMMAR: directives --> 'E'
+  GRAMMAR:            -->
 */
 fn parse_directives(s: &str) -> Result<(Directives, &str)> {
     if let Some(rest) = s.strip_prefix('E') {
