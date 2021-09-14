@@ -87,6 +87,8 @@ pub fn parse_diecode(s: &str) -> Result<DieCode> {
 
     let (directives, _) = parse_directives(rest)?;
 
+    // TODO: check for unwanted cruft after the diecode.
+
     Ok(DieCode {
         factors,
         directives,
@@ -105,9 +107,6 @@ fn parse_codetail<'a>(s: &'a str, factors: &mut Vec<Factor>) -> Result<&'a str> 
 
             return parse_codetail(rest, factors);
         }
-
-        // Ignore any unexpected suffix.
-        // TODO: is this the behavior that we want?
     }
     Ok(s)
 }
