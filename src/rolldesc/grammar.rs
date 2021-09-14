@@ -75,7 +75,7 @@ pub struct Directives {
 /*
   Arbitrary string of d6xd6xd6xd6
 
-  GRAMMAR: diecode    --> factor codetail
+  GRAMMAR: diecode    --> factor codetail directives
 */
 pub fn parse_diecode(s: &str) -> Result<DieCode> {
     let mut factors = vec![];
