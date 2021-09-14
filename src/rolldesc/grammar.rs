@@ -254,37 +254,37 @@ mod test {
                     Factor {
                         sides: 3,
                         modifier: Modifier::Minus(2),
-                        directives: Directives { explode: true },
                         ..Factor::default()
                     },
-                ]
+                ],
+                directives: Directives { explode: true },
             }
         )
     }
 
     #[test]
     fn test_parse_factor() {
-        let (factor, _) = parse_factor("d6").unwrap();
+        let (factor, rest) = parse_factor("d6").unwrap();
         assert_eq!(
             factor,
             Factor {
                 repeat: Default::default(),
                 sides: 6,
                 modifier: Default::default(),
-                directives: Default::default()
             }
         );
+        assert_eq!(rest, "");
 
-        let (factor, _) = parse_factor("3d12-3E").unwrap();
+        let (factor, rest) = parse_factor("3d12-3E").unwrap();
         assert_eq!(
             factor,
             Factor {
                 repeat: Repeat { number: 3 },
                 sides: 12,
                 modifier: Modifier::Minus(3),
-                directives: Directives { explode: true },
             }
-        )
+        );
+        assert_eq!(rest, "E");
     }
 
     #[test]
