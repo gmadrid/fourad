@@ -39,8 +39,6 @@ fn output_code(s: &str, explode: bool, print_codes: bool, force_66: bool) -> fou
     Ok(())
 }
 
-// TODO: BUG! --explodes shouldn't make d8 re-roll on 6.
-
 fn main() -> fourad::Result<()> {
     let args: Args = argh::from_env();
 
