@@ -25,6 +25,9 @@ pub enum FourADError {
 
     #[error("Repeating zero times is not allowed")]
     ZeroRepeats,
+
+    #[error("An I/O error occurred")]
+    IO(#[from] std::io::Error),
 }
 
 pub type Error = FourADError;
