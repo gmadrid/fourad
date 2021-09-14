@@ -2,8 +2,6 @@ use crate::grammar::{DieCode, Factor, Modifier};
 use crate::roller::RandRoller;
 use crate::roller::Roller;
 
-// TODO: add an --explodes command line flag.
-// TODO: move the directives to the end of the entire code, not per factor.
 pub fn execute(code: DieCode, explodes: bool) -> i16 {
     execute_with_roller(code, explodes, &mut RandRoller::default())
 }
@@ -85,8 +83,6 @@ impl Executor {
 mod test {
     use super::*;
     use crate::roller::iterroller::IterRoller;
-
-    // TODO: test exploding
 
     #[test]
     fn test_basic() {

@@ -142,26 +142,17 @@ fn parse_factor(s: &str) -> Result<(Factor, &str)> {
   GRAMMAR:            -->
 */
 fn parse_repeat(s: &str) -> Result<(Repeat, &str)> {
-    if s.starts_with(|ch: char| ch.is_ascii_digit()) {
-        // Find the first ch that is not a digit.
-        // TODO: you could do this as a single call to find and skip the starts_with
-        // TODO: should be using parse_number here.
-        if let Some(end) = s.find(|ch: char| !ch.is_ascii_digit()) {
-            let number = s[..end].parse::<u8>()?;
+    if !s.starts_with(|ch: char| ch.is_ascii_digit()) {
+        // A missing Repeat is equivalent to a '1'.
+        Ok((Repeat { number: 1 }, s))
+    } else {
+        parse_number(s).and_then(|(number, rest)| {
             if number == 0 {
                 Err(Error::ZeroRepeats)
             } else {
-                let repeat = Repeat { number };
-                Ok((repeat, &s[end..]))
+                Ok((Repeat { number }, rest))
             }
-        } else {
-            // This is the case where we find the beginning of the
-            // repeat number, but there is nothing after it.
-            Err(Error::UnexpectedEndOfString(s.to_string()))
-        }
-    } else {
-        // A missing Repeat is equivalent to a '1'.
-        Ok((Repeat { number: 1 }, s))
+        })
     }
 }
 
