@@ -12,8 +12,8 @@ impl ConstRoller {
 }
 
 impl Roller for ConstRoller {
-    fn roll(&mut self, sides: u8) -> u8 {
-        min(self.value, sides)
+    fn roll(&mut self, _sides: u8) -> u8 {
+        self.value
     }
 }
 
@@ -30,15 +30,5 @@ mod test {
         assert_eq!(r.roll(6), 3);
         assert_eq!(r.roll(6), 3);
         assert_eq!(r.roll(6), 3);
-    }
-
-    #[test]
-    fn value_too_big() {
-        let mut r = ConstRoller::new(12);
-        assert_eq!(r.roll(6), 6);
-        assert_eq!(r.roll(6), 6);
-        assert_eq!(r.roll(6), 6);
-        assert_eq!(r.roll(6), 6);
-        assert_eq!(r.roll(6), 6);
     }
 }
