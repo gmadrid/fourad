@@ -14,6 +14,7 @@ use std::str::FromStr;
 #[derive(Debug, Eq, PartialEq)]
 pub struct DieCode {
     pub factors: Vec<Factor>,
+    pub directives: Directives,
 }
 
 impl FromStr for DieCode {
@@ -29,7 +30,6 @@ pub struct Factor {
     pub repeat: Repeat,
     pub sides: u8,
     pub modifier: Modifier,
-    pub directives: Directives,
 }
 
 impl Default for Factor {
@@ -39,7 +39,6 @@ impl Default for Factor {
             repeat: Default::default(),
             sides: 6,
             modifier: Default::default(),
-            directives: Default::default(),
         }
     }
 }
@@ -70,7 +69,7 @@ impl Default for Modifier {
 
 #[derive(Debug, Default, Eq, PartialEq)]
 pub struct Directives {
-    explode: bool,
+    pub explode: bool,
 }
 
 /*
@@ -84,32 +83,37 @@ pub fn parse_diecode(s: &str) -> Result<DieCode> {
     let (factor, rest) = parse_factor(s)?;
     factors.push(factor);
 
-    parse_codetail(rest, &mut factors)?;
+    let rest = parse_codetail(rest, &mut factors)?;
 
-    Ok(DieCode { factors })
+    let (directives, _) = parse_directives(rest)?;
+
+    Ok(DieCode {
+        factors,
+        directives,
+    })
 }
 
 /*
   GRAMMAR: codetail   --> 'x' factor codetail
   GRAMMAR:            -->
 */
-fn parse_codetail(s: &str, factors: &mut Vec<Factor>) -> Result<()> {
+fn parse_codetail<'a>(s: &'a str, factors: &mut Vec<Factor>) -> Result<&'a str> {
     if let Some(ch) = s.chars().next() {
         if ch == 'x' {
             let (factor, rest) = parse_factor(&s[1..])?;
             factors.push(factor);
 
-            parse_codetail(rest, factors)?;
+            return parse_codetail(rest, factors);
         }
 
         // Ignore any unexpected suffix.
         // TODO: is this the behavior that we want?
     }
-    Ok(())
+    Ok(s)
 }
 
 /*
-  GRAMMAR: factor     --> repeat 'd' sides modifier directives
+  GRAMMAR: factor     --> repeat 'd' sides modifier
 */
 fn parse_factor(s: &str) -> Result<(Factor, &str)> {
     let (repeat, rest) = parse_repeat(s)?;
@@ -124,13 +128,11 @@ fn parse_factor(s: &str) -> Result<(Factor, &str)> {
 
     let (sides, rest) = parse_sides(&rest[1..])?;
     let (modifier, rest) = parse_modifier(rest)?;
-    let (directives, rest) = parse_directives(rest)?;
 
     let factor = Factor {
         repeat,
         sides,
         modifier,
-        directives,
     };
     Ok((factor, rest))
 }

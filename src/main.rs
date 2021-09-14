@@ -9,7 +9,7 @@ struct Args {
     codes: Vec<String>,
 
     /// if set, all d6 rolls will 'explode' (keep rolling on a '6').
-    #[argh(switch, short='X')]
+    #[argh(switch, short = 'X')]
     explode: bool,
 }
 

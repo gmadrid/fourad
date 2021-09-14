@@ -77,7 +77,7 @@ impl Executor {
     }
 
     fn explode(&self) -> bool {
-        self.explodes
+        self.explodes || self.code.directives.explode
     }
 }
 
