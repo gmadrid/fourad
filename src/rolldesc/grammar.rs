@@ -226,9 +226,6 @@ fn parse_directives(s: &str) -> Result<(Directives, &str)> {
 mod test {
     use super::*;
 
-    // TODO: check that sides != 0.
-    // TODO: check that repeat != 0.
-
     #[test]
     fn test_parse_diecode() {
         let diecode = parse_diecode("d6").unwrap();

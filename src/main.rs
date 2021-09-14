@@ -1,6 +1,7 @@
 use argh::FromArgs;
 
 // TODO: improve output formatting.
+// TODO: change 'explode' and 'explodes' to be consistent.
 
 #[derive(FromArgs)]
 /// A dice roller for _Four Against Darkness_
@@ -23,7 +24,6 @@ fn main() -> fourad::Result<()> {
         if print_codes {
             println!("{}", code);
         }
-        // TODO: add an --explodes switch
         println!("===> {}", fourad::roll(&code, args.explode)?);
         if print_codes {
             println!()
