@@ -3,20 +3,21 @@ use crate::roller::RandRoller;
 use crate::roller::Roller;
 use std::ops::ControlFlow;
 
-pub fn execute(code: DieCode, explodes: bool) -> i16 {
-    execute_with_roller(code, explodes, &mut RandRoller::default())
+pub fn execute(code: DieCode, explodes: bool, force_66: bool) -> i16 {
+    execute_with_roller(code, explodes, force_66, &mut RandRoller::default())
 }
 
-pub fn execute_with_roller<R>(code: DieCode, explodes: bool, roller: &mut R) -> i16
+pub fn execute_with_roller<R>(code: DieCode, explodes: bool, force_66: bool, roller: &mut R) -> i16
 where
     R: Roller,
 {
-    Executor { code, explodes }.execute(roller)
+    Executor { code, explodes, force_66 }.execute(roller)
 }
 
 struct Executor {
     code: DieCode,
     explodes: bool,
+    force_66: bool,
 }
 
 impl Executor {
@@ -37,7 +38,7 @@ impl Executor {
     }
 
     fn roll(&self, sides: u8, explode: bool, roller: &mut impl Roller) -> i16 {
-        if sides == 66 {
+        if sides == 66 && !self.force_66 {
             // special case!
             // TODO: add a flag to allow rolling an actual d66.
             return self.roll_d66(roller);

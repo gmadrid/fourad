@@ -32,6 +32,6 @@ pub enum FourADError {
 
 pub type Error = FourADError;
 
-pub fn roll(diecode: &str, explodes: bool) -> Result<i16> {
-    Ok(execute(diecode.parse()?, explodes))
+pub fn roll(diecode: &str, explodes: bool, force_66: bool) -> Result<i16> {
+    Ok(execute(diecode.parse()?, explodes, force_66))
 }
