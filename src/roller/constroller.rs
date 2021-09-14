@@ -1,5 +1,4 @@
 use crate::roller::Roller;
-use std::cmp::min;
 
 struct ConstRoller {
     value: u8,
