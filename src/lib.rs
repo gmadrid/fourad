@@ -5,6 +5,7 @@ use executor::execute;
 
 mod grammar;
 mod roller;
+mod spew;
 
 pub type Result<T> = std::result::Result<T, FourADError>;
 
@@ -38,3 +39,5 @@ pub type Error = FourADError;
 pub fn roll(diecode: &str, explode: bool, force_66: bool) -> Result<i16> {
     Ok(execute(diecode.parse()?, explode, force_66))
 }
+
+pub use spew::{quiet, set_level, spew, verbose, SpewLevel};

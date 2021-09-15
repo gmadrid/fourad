@@ -1,4 +1,5 @@
 use argh::FromArgs;
+use fourad::{quiet, spew, verbose, SpewLevel};
 use std::io::{BufRead, BufReader};
 
 // TODO: improve output formatting.
@@ -16,6 +17,14 @@ struct Args {
     /// if set, d66 will be treated as a 66-sided die
     #[argh(switch)]
     force_66: bool,
+
+    /// if set, run with minimal output
+    #[argh(switch, short = 'q')]
+    quiet: bool,
+
+    /// if set, run with lots of output
+    #[argh(switch, short = 'v')]
+    verbose: bool,
 }
 
 fn process_stdin(explode: bool, force_66: bool) -> fourad::Result<()> {
@@ -30,17 +39,30 @@ fn process_stdin(explode: bool, force_66: bool) -> fourad::Result<()> {
 
 fn output_code(s: &str, explode: bool, print_codes: bool, force_66: bool) -> fourad::Result<()> {
     if print_codes {
-        println!("{}", s);
+        spew(format!("{}", s));
     }
-    println!("===> {}", fourad::roll(s, explode, force_66)?);
+    quiet(format!("===> {}", fourad::roll(s, explode, force_66)?));
     if print_codes {
-        println!()
+        spew("")
     }
     Ok(())
 }
 
+fn set_spew_level(args: &Args) {
+    // TODO: check that not both --quiet and --verbose
+    fourad::set_level(if args.quiet {
+        SpewLevel::QUIET
+    } else if args.verbose {
+        SpewLevel::VERBOSE
+    } else {
+        SpewLevel::STANDARD
+    });
+}
+
 fn main() -> fourad::Result<()> {
     let args: Args = argh::from_env();
+
+    set_spew_level(&args);
 
     if args.codes.is_empty() {
         return process_stdin(args.explode, args.force_66);
