@@ -78,6 +78,8 @@ pub struct Directives {
   GRAMMAR: diecode    --> factor codetail directives
 */
 pub fn parse_diecode(s: &str) -> Result<DieCode> {
+    let s = s.trim();
+
     let mut factors = vec![];
 
     let (factor, rest) = parse_factor(s)?;
@@ -85,9 +87,11 @@ pub fn parse_diecode(s: &str) -> Result<DieCode> {
 
     let rest = parse_codetail(rest, &mut factors)?;
 
-    let (directives, _) = parse_directives(rest)?;
+    let (directives, rest) = parse_directives(rest)?;
 
-    // TODO: check for unwanted cruft after the diecode.
+    if !rest.is_empty() {
+        return Err(Error::UnexpectedEOL(rest.to_string()));
+    }
 
     Ok(DieCode {
         factors,

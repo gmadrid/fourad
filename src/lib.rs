@@ -28,6 +28,9 @@ pub enum FourADError {
 
     #[error("An I/O error occurred")]
     IO(#[from] std::io::Error),
+
+    #[error("Unexpected input at end of line: {0}")]
+    UnexpectedEOL(String),
 }
 
 pub type Error = FourADError;
