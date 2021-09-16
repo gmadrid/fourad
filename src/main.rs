@@ -49,8 +49,13 @@ fn output_code(s: &str, explode: bool, print_codes: bool, force_66: bool) -> fou
     Ok(())
 }
 
-fn set_spew_level(args: &Args) -> Result<()> {
-    // TODO: check that not both --quiet and --verbose
+fn set_spew_level(args: &Args) -> fourad::Result<()> {
+    if args.quiet && args.verbose {
+        return Err(fourad::Error::GeneralError(
+            "--quiet and --vesbose are not compatible.".to_string(),
+        ));
+    }
+
     fourad::set_level(if args.quiet {
         SpewLevel::QUIET
     } else if args.verbose {
@@ -64,7 +69,7 @@ fn set_spew_level(args: &Args) -> Result<()> {
 fn main() -> fourad::Result<()> {
     let args: Args = argh::from_env();
 
-    set_spew_level(&args);
+    set_spew_level(&args)?;
 
     if args.codes.is_empty() {
         return process_stdin(args.explode, args.force_66);

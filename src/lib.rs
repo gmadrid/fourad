@@ -34,6 +34,9 @@ pub enum FourADError {
 
     #[error("Unexpected input at end of line: {0}")]
     UnexpectedEOL(String),
+
+    #[error("Error: (0)")]
+    GeneralError(String),
 }
 
 pub type Error = FourADError;

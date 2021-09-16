@@ -1,5 +1,7 @@
 use std::sync::Mutex;
 
+// TODO: move this to a separate crate for reusability.
+
 static INSTANCE: once_cell::sync::Lazy<Mutex<Spew>> = once_cell::sync::Lazy::new(|| {
     Mutex::new(Spew {
         level: SpewLevel::STANDARD,
