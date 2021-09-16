@@ -5,6 +5,8 @@ use executor::execute;
 
 mod grammar;
 mod roller;
+
+#[macro_use]
 mod spew;
 
 pub type Result<T> = std::result::Result<T, FourADError>;
@@ -40,4 +42,5 @@ pub fn roll(diecode: &str, explode: bool, force_66: bool) -> Result<i16> {
     Ok(execute(diecode.parse()?, explode, force_66))
 }
 
-pub use spew::{quiet, set_level, spew, verbose, SpewLevel};
+// *_fa functions are exported for the macros to use.
+pub use spew::{quiet_fa, set_level, spew_fa, verbose_fa, SpewLevel};

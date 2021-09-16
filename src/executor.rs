@@ -1,7 +1,7 @@
 use crate::grammar::{DieCode, Factor, Modifier};
 use crate::roller::RandRoller;
 use crate::roller::Roller;
-use crate::spew::verbose;
+use crate::verbose;
 use std::ops::ControlFlow;
 
 pub fn execute(code: DieCode, explode: bool, force_66: bool) -> i16 {
@@ -50,8 +50,7 @@ impl Executor {
         }
 
         match std::iter::repeat_with(|| roller.roll(sides))
-            // TODO: add a quiet option
-            .inspect(|die| verbose(format!("Rolled: {}", die)))
+            .inspect(|die| verbose!("Rolled: {}", die))
             .try_fold(0, |sum, die| {
                 if sides != 6 || die != 6 || !explode {
                     ControlFlow::Break(sum + die)

@@ -39,16 +39,17 @@ fn process_stdin(explode: bool, force_66: bool) -> fourad::Result<()> {
 
 fn output_code(s: &str, explode: bool, print_codes: bool, force_66: bool) -> fourad::Result<()> {
     if print_codes {
-        spew(format!("{}", s));
+        spew!("{}", s);
     }
-    quiet(format!("===> {}", fourad::roll(s, explode, force_66)?));
+    // TODO: this prints too much when "quiet".
+    quiet!("===> {}", fourad::roll(s, explode, force_66)?);
     if print_codes {
-        spew("")
+        spew!("")
     }
     Ok(())
 }
 
-fn set_spew_level(args: &Args) {
+fn set_spew_level(args: &Args) -> Result<()> {
     // TODO: check that not both --quiet and --verbose
     fourad::set_level(if args.quiet {
         SpewLevel::QUIET
@@ -57,6 +58,7 @@ fn set_spew_level(args: &Args) {
     } else {
         SpewLevel::STANDARD
     });
+    Ok(())
 }
 
 fn main() -> fourad::Result<()> {
