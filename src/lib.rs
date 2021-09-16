@@ -19,9 +19,8 @@ pub enum FourADError {
     #[error("Unexpected end of input while parsing '{0}'.")]
     UnexpectedEndOfString(String),
 
-    // TODO: consider making this an error with the bad string in it.
     #[error("Could not parse a number")]
-    ParseNumberError(#[from] std::num::ParseIntError),
+    ParseNumberError(String, std::num::ParseIntError),
 
     #[error("Dice cannot have zero sides or one side.")]
     ZeroOrOneSide,

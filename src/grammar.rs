@@ -174,9 +174,15 @@ fn parse_sides(s: &str) -> Result<(u8, &str)> {
 */
 fn parse_number(s: &str) -> Result<(u8, &str)> {
     if let Some(end) = s.find(|ch: char| !ch.is_ascii_digit()) {
-        Ok((s[..end].parse::<u8>()?, &s[end..]))
+        let number: u8 = s[..end]
+            .parse()
+            .map_err(|err| Error::ParseNumberError(s[..end].to_string(), err))?;
+        Ok((number, &s[end..]))
     } else {
-        Ok((s.parse::<u8>()?, ""))
+        let number: u8 = s
+            .parse()
+            .map_err(|err| Error::ParseNumberError(s.to_string(), err))?;
+        Ok((number, ""))
     }
 }
 
@@ -320,10 +326,10 @@ mod test {
         assert_eq!(rest, "");
 
         let err = parse_number("888").unwrap_err();
-        assert!(matches!(err, Error::ParseNumberError(_)));
+        assert!(matches!(err, Error::ParseNumberError(_, _)));
 
         let err = parse_number("MISSING").unwrap_err();
-        assert!(matches!(err, Error::ParseNumberError(_)));
+        assert!(matches!(err, Error::ParseNumberError(_, _)));
     }
 
     #[test]
@@ -351,11 +357,11 @@ mod test {
 
         // TOO BIG
         let err = parse_operand("1234REST").unwrap_err();
-        assert!(matches!(err, Error::ParseNumberError(_)));
+        assert!(matches!(err, Error::ParseNumberError(_, _)));
 
         // MISSING
         let err = parse_operand("MISSING").unwrap_err();
-        assert!(matches!(err, Error::ParseNumberError(_)));
+        assert!(matches!(err, Error::ParseNumberError(_, _)));
     }
 
     #[test]
