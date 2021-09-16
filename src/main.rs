@@ -1,5 +1,5 @@
 use argh::FromArgs;
-use fourad::{quiet, spew, verbose, SpewLevel};
+use fourad::{quiet, spew, Error, SpewLevel};
 use std::io::{BufRead, BufReader};
 
 // TODO: improve output formatting.
@@ -28,12 +28,13 @@ struct Args {
 }
 
 fn process_stdin(explode: bool, force_66: bool) -> fourad::Result<()> {
-    let input = BufReader::new(std::io::stdin());
-
-    for line in input.lines() {
-        let line = line?;
-        output_code(&line, explode, true, force_66)?;
-    }
+    BufReader::new(std::io::stdin())
+        .lines()
+        .map(|line_wrapped| {
+            let line = line_wrapped?;
+            output_code(&line, explode, true, force_66)
+        })
+        .collect::<Result<Vec<_>, Error>>()?;
     Ok(())
 }
 
