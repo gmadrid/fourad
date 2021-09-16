@@ -1,7 +1,7 @@
 use crate::grammar::{DieCode, Factor, Modifier};
 use crate::roller::RandRoller;
 use crate::roller::Roller;
-use crate::verbose;
+use spew::verbose;
 use std::ops::ControlFlow;
 
 pub fn execute(code: DieCode, explode: bool, force_66: bool) -> i16 {

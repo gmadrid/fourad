@@ -1,13 +1,6 @@
-[package]
-edition = "2018"
-name = "fourad"
-version = "0.1.0"
+[workspace]
 
-[dependencies]
-argh = "0.1.6"
-once_cell = "*"
-rand = "0.8.4"
-regex = "1.5.4"
-thiserror = "1.0.29"
-
-[lib]
+members = [
+  "diecodes",
+"spew",
+]

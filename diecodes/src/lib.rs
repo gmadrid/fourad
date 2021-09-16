@@ -6,9 +6,6 @@ use executor::execute;
 mod grammar;
 mod roller;
 
-#[macro_use]
-mod spew;
-
 pub type Result<T> = std::result::Result<T, FourADError>;
 
 #[derive(Debug, Error)]

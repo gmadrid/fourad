@@ -1,5 +1,5 @@
 use argh::FromArgs;
-use fourad::{quiet, spew, SpewLevel};
+use spew::{quiet, spew, SpewLevel};
 use std::io::{BufRead, BufReader};
 
 // TODO: improve output formatting.
