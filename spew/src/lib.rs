@@ -77,3 +77,6 @@ impl Spew {
         }
     }
 }
+
+mod play;
+pub use play::{bool_iter, bool_iter_val, bool_iter_with, if_some, if_some_with};
