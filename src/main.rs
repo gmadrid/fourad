@@ -30,11 +30,10 @@ struct Args {
 fn process_stdin(explode: bool, force_66: bool) -> fourad::Result<()> {
     BufReader::new(std::io::stdin())
         .lines()
-        .map(|line_wrapped| {
+        .try_for_each(|line_wrapped| {
             let line = line_wrapped?;
             output_code(&line, explode, true, force_66)
         })
-        .collect()
 }
 
 fn output_code(s: &str, explode: bool, print_codes: bool, force_66: bool) -> fourad::Result<()> {
