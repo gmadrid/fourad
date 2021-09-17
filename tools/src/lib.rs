@@ -78,5 +78,8 @@ impl Spew {
     }
 }
 
+mod lines;
+pub use lines::{process_bufread, process_stdin};
+
 mod play;
 pub use play::{bool_iter, bool_iter_val, bool_iter_with, if_some, if_some_with};

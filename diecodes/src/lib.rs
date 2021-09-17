@@ -42,4 +42,4 @@ pub fn roll(diecode: &str, explode: bool, force_66: bool) -> Result<i16> {
 }
 
 // *_fa functions are exported for the macros to use.
-pub use spew::{quiet_fa, set_level, spew_fa, verbose_fa, SpewLevel};
+pub use tools::{quiet_fa, set_level, spew_fa, verbose_fa, SpewLevel};

@@ -2,5 +2,5 @@
 
 members = [
   "diecodes",
-"spew",
+"tools",
 ]

@@ -1,6 +1,6 @@
 use argh::FromArgs;
-use spew::{quiet, spew, SpewLevel};
 use std::io::{BufRead, BufReader};
+use tools::{quiet, spew, SpewLevel};
 
 // TODO: improve output formatting.
 
@@ -25,15 +25,6 @@ struct Args {
     /// if set, run with lots of output
     #[argh(switch, short = 'v')]
     verbose: bool,
-}
-
-fn process_stdin(explode: bool, force_66: bool) -> fourad::Result<()> {
-    BufReader::new(std::io::stdin())
-        .lines()
-        .try_for_each(|line_wrapped| {
-            let line = line_wrapped?;
-            output_code(&line, explode, true, force_66)
-        })
 }
 
 fn output_code(s: &str, explode: bool, print_codes: bool, force_66: bool) -> fourad::Result<()> {
@@ -71,7 +62,7 @@ fn main() -> fourad::Result<()> {
     set_spew_level(&args)?;
 
     if args.codes.is_empty() {
-        return process_stdin(args.explode, args.force_66);
+        tools::process_stdin(|line| output_code(line, args.explode, true, args.force_66))?;
     }
 
     let print_codes = args.codes.len() > 1;

@@ -1,8 +1,8 @@
 use crate::grammar::{DieCode, Factor, Modifier};
 use crate::roller::RandRoller;
 use crate::roller::Roller;
-use spew::verbose;
 use std::ops::ControlFlow;
+use tools::verbose;
 
 pub fn execute(code: DieCode, explode: bool, force_66: bool) -> i16 {
     execute_with_roller(code, explode, force_66, &mut RandRoller::default())
